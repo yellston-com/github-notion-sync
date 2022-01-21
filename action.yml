@@ -1,0 +1,12 @@
+name: 'Link GitHub pull request with Notion'
+
+description: 'You can link GitHub pull request with Notion.'
+
+inputs:
+  trello-action:
+    description: 'Action to do'
+    required: true
+
+runs:
+  using: node12
+  main: 'dist/index.js'
