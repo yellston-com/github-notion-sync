@@ -25,7 +25,7 @@ try {
 function updateNotionWhenPullRequestOpen() {
   const github = require("@actions/github")
   const pullRequest: WebhookPayload = github.context.payload.pull_request
-  if (('html_url' in pullRequest) && ('body' in pullRequest)) return
+  if (!(('html_url' in pullRequest) && ('body' in pullRequest))) return
   const pullRequestLink: string = pullRequest.html_url
   const body: string = pullRequest.body
   const notionUrl: RegExpMatchArray | null  = body.match(/https:\/\/www\.notion\.so\/\S+-(\w{32})/)
