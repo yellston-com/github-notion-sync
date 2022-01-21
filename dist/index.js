@@ -28762,7 +28762,7 @@ catch (err) {
 function updateNotionWhenPullRequestOpen() {
     const github = __nccwpck_require__(5438);
     const pullRequest = github.context.payload.pull_request;
-    if (('html_url' in pullRequest) && ('body' in pullRequest))
+    if (!(('html_url' in pullRequest) && ('body' in pullRequest)))
         return;
     const pullRequestLink = pullRequest.html_url;
     const body = pullRequest.body;
