@@ -1,9 +1,9 @@
-name: 'Link GitHub pull request with Notion'
+name: 'Sync GitHub pull request with Notion'
 
-description: 'You can link GitHub pull request with Notion.'
+description: 'You can sync GitHub pull request with Notion.'
 
 inputs:
-  trello-action:
+  notion-action:
     description: 'Action to do'
     required: true
 

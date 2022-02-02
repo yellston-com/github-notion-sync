@@ -28730,7 +28730,44 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 6144:
+/***/ 1314:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getPullRequestUrl = exports.getPullRequestBody = exports.getNotionPageId = void 0;
+function getNotionPageId() {
+    const body = getPullRequestBody();
+    const urlReg = body.match(/(?:https|notion):\/\/www\.notion\.so\/(?:\S+-?|)(\w{32})/);
+    if (urlReg && urlReg.length > 0)
+        return urlReg[1];
+    return '';
+}
+exports.getNotionPageId = getNotionPageId;
+function pullRequestPayload() {
+    const github = __nccwpck_require__(5438);
+    return github.context.payload.pull_request;
+}
+function getPullRequestBody() {
+    const pullRequest = pullRequestPayload();
+    if (!('body' in pullRequest))
+        return '';
+    return pullRequest.body;
+}
+exports.getPullRequestBody = getPullRequestBody;
+function getPullRequestUrl() {
+    const pullRequest = pullRequestPayload();
+    if (!('html_url' in pullRequest))
+        return '';
+    return pullRequest.html_url;
+}
+exports.getPullRequestUrl = getPullRequestUrl;
+
+
+/***/ }),
+
+/***/ 9734:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -28745,32 +28782,61 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __nccwpck_require__(2186);
-const action = core.getInput('trello-action');
-const { Client } = __nccwpck_require__(324);
-const notion = new Client({ auth: process.env["NOTION_KEY"] });
-try {
-    switch (action) {
-        case 'update_notion_when_pull_request_opened':
-            updateNotionWhenPullRequestOpen();
-            break;
-    }
-}
-catch (err) {
-    core.setFailed(err.message);
-}
-function updateNotionWhenPullRequestOpen() {
-    const github = __nccwpck_require__(5438);
-    const pullRequest = github.context.payload.pull_request;
-    if (!(('html_url' in pullRequest) && ('body' in pullRequest)))
-        return;
-    const pullRequestLink = pullRequest.html_url;
-    const body = pullRequest.body;
-    const notionUrl = body.match(/https:\/\/www\.notion\.so\/\S+-(\w{32})/);
-    if (notionUrl && notionUrl.length > 0)
-        updateNotionBlock(pullRequestLink, notionUrl[1]).then(() => {
+const utils_1 = __nccwpck_require__(1314);
+function updateWhenClosed() {
+    const notionPageId = (0, utils_1.getNotionPageId)();
+    if (notionPageId)
+        updateNotionBlock(notionPageId).then(() => {
         });
 }
+exports["default"] = updateWhenClosed;
+function updateNotionBlock(notionPageId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { Client } = __nccwpck_require__(324);
+        const notion = new Client({ auth: process.env["NOTION_KEY"] });
+        const response = yield notion.pages.update({
+            page_id: notionPageId,
+            properties: {
+                "ステータス": {
+                    "select": {
+                        "name": "完了"
+                    }
+                }
+            }
+        });
+        console.log(response);
+    });
+}
+
+
+/***/ }),
+
+/***/ 429:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const utils_1 = __nccwpck_require__(1314);
+const { Client } = __nccwpck_require__(324);
+const notion = new Client({ auth: process.env["NOTION_KEY"] });
+function updateWhenOpened() {
+    const pullRequestLink = (0, utils_1.getPullRequestUrl)();
+    const notionPageId = (0, utils_1.getNotionPageId)();
+    if (notionPageId)
+        updateNotionBlock(pullRequestLink, notionPageId).then(() => {
+        });
+}
+exports["default"] = updateWhenOpened;
 function updateNotionBlock(pullRequestLink, notionPageId) {
     return __awaiter(this, void 0, void 0, function* () {
         const childBlockRes = yield notion.blocks.children.list({
@@ -29009,12 +29075,33 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __nccwpck_require__(2186);
+const whenOpened_1 = __nccwpck_require__(429);
+const whenClosed_1 = __nccwpck_require__(9734);
+const action = core.getInput('notion-action');
+try {
+    switch (action) {
+        case 'when_pull_request_opened':
+            (0, whenOpened_1.default)();
+            break;
+        case 'when_pull_request_closed':
+            (0, whenClosed_1.default)();
+            break;
+    }
+}
+catch (err) {
+    core.setFailed(err.message);
+}
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
